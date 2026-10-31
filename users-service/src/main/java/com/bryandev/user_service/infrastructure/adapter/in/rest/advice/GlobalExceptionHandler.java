@@ -1,6 +1,7 @@
 package com.bryandev.user_service.infrastructure.adapter.in.rest.advice;
 
 import com.bryandev.user_service.domain.exception.InvalidCredentialsException;
+import com.bryandev.user_service.domain.exception.UserNotFoundException;
 import com.bryandev.user_service.domain.exception.UsernameAlreadyExistsException;
 import com.bryandev.user_service.infrastructure.adapter.in.rest.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,17 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+        ApiResponse<Void> response = ApiResponse.error(
+                "Recurso no encontrado",
+                HttpStatus.NOT_FOUND.value(),
+                "USER_NOT_FOUND",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(Exception.class)

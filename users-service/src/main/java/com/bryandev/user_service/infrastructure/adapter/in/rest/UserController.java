@@ -3,6 +3,8 @@ package com.bryandev.user_service.infrastructure.adapter.in.rest;
 import com.bryandev.user_service.application.command.LoginUserCommand;
 import com.bryandev.user_service.application.command.RegisterUserCommand;
 import com.bryandev.user_service.application.dto.response.AuthResponse;
+import com.bryandev.user_service.application.dto.response.UserProfileResponse;
+import com.bryandev.user_service.application.port.in.GetUserProfileUseCase;
 import com.bryandev.user_service.application.port.in.LoginUserUseCase;
 import com.bryandev.user_service.application.port.in.RegisterUserUseCase;
 import com.bryandev.user_service.infrastructure.adapter.in.rest.dto.request.CreateUserRequest;
@@ -13,10 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
+    private final GetUserProfileUseCase getUserProfileUseCase;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> registerUser(@RequestBody @Valid CreateUserRequest request) {
@@ -51,6 +52,29 @@ public class UserController {
         var authResponse = loginUserUseCase.login(command);
 
         var apiResponse = ApiResponse.success("Login exitoso", authResponse);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getProfile(Authentication authentication) {
+
+        // 1. Obtener el username del contexto de seguridad (inyectado por el filtro JWT)
+        String username = authentication.getName();
+
+        // 2. Ejecutar caso de uso
+        var user = getUserProfileUseCase.getProfile(username);
+
+        // 3. Mapear a DTO
+        var response = new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getCreatedAt()
+        );
+
+        // 4. Envolver en ApiResponse
+        var apiResponse = ApiResponse.success("Perfil obtenido exitosamente", response);
 
         return ResponseEntity.ok(apiResponse);
     }
