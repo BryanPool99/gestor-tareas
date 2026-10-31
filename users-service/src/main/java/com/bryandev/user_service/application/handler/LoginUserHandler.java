@@ -31,7 +31,7 @@ public class LoginUserHandler implements LoginUserUseCase {
         }
 
         // 3. Generar Token JWT
-        String token = jwtServicePort.generateToken(user.getUsername());
+        String token = jwtServicePort.generateToken(user.getUsername(), user.getId());
 
         // 4. Retornar respuesta
         return new AuthResponse(token, user.getUsername(), "Login exitoso");
