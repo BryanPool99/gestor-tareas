@@ -1,0 +1,26 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    container_name: users-db
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: users_user
+      POSTGRES_PASSWORD: users_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    networks:
+      - gestor-tareas-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_user -d users_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  users_data:
+
+networks:
+  gestor-tareas-net:
+    driver: bridge
