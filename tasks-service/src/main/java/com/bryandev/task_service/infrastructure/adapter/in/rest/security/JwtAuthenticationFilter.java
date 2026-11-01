@@ -9,8 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,11 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtServicePort jwtServicePort;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -41,39 +36,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // 1. Extraer username
             String username = jwtServicePort.extractUsername(token);
+            Long userId = jwtServicePort.extractUserId(token);
 
-            // 2. Validar que el token sea válido para ese usuario
-            if (username!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
-
+            if (username!=null && userId!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
                 if (jwtServicePort.isTokenValid(token, username)) {
-
-                    UserDetails userDetails = User.builder()
-                            .username(username)
-                            .password("N/A") // No importa, no usamos auth por contraseña aquí
-                            .authorities(new ArrayList<>())
-                            .build();
+                    CustomUserDetails userDetails = new CustomUserDetails(userId, username, new ArrayList<>());
 
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    // El token no es válido (expiró o fue manipulado)
                     throw new InvalidTokenException("El token ha expirado o no es válido");
                 }
             }
         } catch (InvalidTokenException e) {
-            // Relanzamos nuestra excepción personalizada para que la capture el GlobalExceptionHandler
             throw e;
         } catch (Exception e) {
-            // Capturamos cualquier otro error de JWT (ej: token mal formado, firma incorrecta)
             throw new InvalidTokenException("Error al procesar el token de autenticación");
         }
 

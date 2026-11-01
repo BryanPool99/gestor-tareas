@@ -1,4 +1,7 @@
 services:
+  # ==========================================
+  # 1. BASE DE DATOS DE USUARIOS (User Service)
+  # ==========================================
   users-db:
     image: postgres:16-alpine
     container_name: users-db
@@ -18,8 +21,31 @@ services:
       timeout: 5s
       retries: 5
 
+  # ==========================================
+  # 2. BASE DE DATOS DE TAREAS (Task Service)
+  # ==========================================
+  tasks-db:
+    image: postgres:16-alpine
+    container_name: tasks-db
+    environment:
+      POSTGRES_DB: tasks_db
+      POSTGRES_USER: tasks_user
+      POSTGRES_PASSWORD: tasks_password
+    ports:
+      - "5434:5432"  # Puerto diferente en tu PC para evitar cruces
+    volumes:
+      - tasks_data:/var/lib/postgresql/data
+    networks:
+      - gestor-tareas-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasks_user -d tasks_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   users_data:
+  tasks_data:
 
 networks:
   gestor-tareas-net:

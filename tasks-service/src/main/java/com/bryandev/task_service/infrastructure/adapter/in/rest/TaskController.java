@@ -17,6 +17,7 @@ import com.bryandev.task_service.infrastructure.adapter.in.rest.dto.request.Crea
 import com.bryandev.task_service.infrastructure.adapter.in.rest.dto.request.PatchTaskRequest;
 import com.bryandev.task_service.infrastructure.adapter.in.rest.dto.request.UpdateTaskRequest;
 import com.bryandev.task_service.infrastructure.adapter.in.rest.dto.response.ApiResponse;
+import com.bryandev.task_service.infrastructure.adapter.in.rest.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,7 @@ public class TaskController {
             @Valid @RequestBody CreateTaskRequest request,
             Authentication authentication) {
 
-        Long userId = extractUserId(authentication);
+        Long userId = getUserId(authentication);
         var command = new CreateTaskCommand(request.title(), request.description(), userId);
         Task task = createTaskUseCase.execute(command);
 
@@ -102,7 +103,6 @@ public class TaskController {
     // --- LISTADO (endpoint único con Strategy) ---
     @GetMapping
     public ResponseEntity<ApiResponse<TaskPageResponse>> list(
-            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) TaskStatus status,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
@@ -112,19 +112,18 @@ public class TaskController {
             Authentication authentication) {
 
         // Si no se pasa userId, usar el del token
-        Long effectiveUserId = userId!=null ? userId:extractUserId(authentication);
+        Long userId = getUserId(authentication);
 
         var pagination = new PaginationParams(page, size, sortBy, sortDirection);
-        var query = new ListTasksQuery(effectiveUserId, status, search, pagination);
+        var query = new ListTasksQuery(userId, status, search, pagination);
 
         PagedResult<Task> result = listTasksUseCase.execute(query);
 
         return ResponseEntity.ok(ApiResponse.success("Tareas listadas", TaskPageResponse.from(result)));
     }
 
-    // --- Helper ---
-    private Long extractUserId(Authentication authentication) {
-        // Por ahora retornamos un valor fijo; luego lo conectaremos con users-service
-        return 1L;
+    private Long getUserId(Authentication authentication) {
+        var userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
     }
 }

@@ -21,7 +21,9 @@ public class JpaTaskRepositoryAdapter implements TaskRepositoryPort {
 
     @Override
     public Task save(Task task) {
-        return null;
+        var entity = taskMapper.toEntity(task);
+        var saved = jpaRepository.save(entity);
+        return taskMapper.toDomain(saved);
     }
 
     @Override

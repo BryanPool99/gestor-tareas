@@ -1,7 +1,6 @@
 package com.bryandev.task_service.infrastructure.adapter.out.persistence.jpa.mapper;
 
 import com.bryandev.task_service.domain.criteria.PaginationParams;
-import com.bryandev.task_service.domain.enums.TaskStatus;
 import com.bryandev.task_service.domain.model.PagedResult;
 import com.bryandev.task_service.domain.model.Task;
 import com.bryandev.task_service.infrastructure.adapter.out.persistence.jpa.entity.TaskEntity;
@@ -23,7 +22,7 @@ public class TaskMapper {
                 .id(domain.getId())
                 .title(domain.getTitle())
                 .description(domain.getDescription())
-                .status(domain.getStatus().name())
+                .status(domain.getStatus())
                 .userId(domain.getUserId())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
@@ -36,7 +35,7 @@ public class TaskMapper {
                 entity.getId(),
                 entity.getTitle(),
                 entity.getDescription(),
-                TaskStatus.valueOf(entity.getStatus()),
+                entity.getStatus(),
                 entity.getUserId(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

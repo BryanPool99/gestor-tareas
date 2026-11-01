@@ -1,5 +1,6 @@
 package com.bryandev.task_service.infrastructure.adapter.out.persistence.jpa.entity;
 
+import com.bryandev.task_service.domain.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +26,7 @@ public class TaskEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status; // Guardamos como String para flexibilidad
+    private TaskStatus status; // Guardamos como String para flexibilidad
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
